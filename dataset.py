@@ -11,7 +11,7 @@ class NamesDataset (Dataset):
     def __init__(self, data_dir):
         self.data_dir = data_dir # where the data is stored
         self.load_time = time.localtime
-        labels_set = set() # set of all the possible languages
+        self.labels_unique = [] # unique list of every language (use list to preserve order, then dict to remove duplicates)
 
         self.data = [] # list of names
         self.data_tensors = [] # list of names in tensor lists
@@ -22,7 +22,7 @@ class NamesDataset (Dataset):
         text_files = glob.glob(os.path.join(data_dir, '*.txt'))
         for filename in text_files: # go thru each of the text files, get the name of the file, add to labels set
             label = os.path.splitext(os.path.basename(filename))[0]
-            labels_set.add(label)
+            self.labels_unique.append(label)
             lines = open(filename, encoding='utf-8').read().strip().split('\n') # list of each name in a file
             for name in lines: # go through each name, add the name, name in tensor list, language
                 self.data.append(name)
@@ -30,7 +30,7 @@ class NamesDataset (Dataset):
                 self.labels.append(label)
 
         # go thru the labels and turn them into tensors
-        self.labels_unique = list(labels_set)
+        self.labels_unique = list(dict.fromkeys(self.labels_unique)) # remove possible duplicates by turning into dict then back
         for index in range(len(self.labels)):
             temp_tensor = torch.tensor([self.labels_unique.index(self.labels[index])], dtype = torch.long)
             self.labels_tensors.append(temp_tensor)
