@@ -21,7 +21,7 @@ torch.set_default_device(device)
 all_data = NamesDataset("data/names")
 
 # split dataset into training and testing set
-train_set, test_set = torch.utils.data.random_split(all_data, [.8, .2], 
+train_set, test_set = torch.utils.data.random_split(all_data, [.2, .8], 
                                                     generator = torch.Generator(device = device).manual_seed(123))
 
 
@@ -62,13 +62,16 @@ def train(rnn, training_data, num_epoch = 10, batch_size = 64, report_every = 5,
 
             current_loss += batch_loss.item() / len(batch)
 
-        all_losses.append(current_loss / len(batch))
+        # log the current loss
+        all_losses.append(current_loss / len(batches))
         if epoch_index % report_every == 0:
             print(f'Epoch {epoch_index}: average batch loss = {all_losses[-1]}')
 
+        current_loss = 0 # reset loss so it doesn't build up in the tracking
+
     return all_losses
 
-all_losses = train(rnn, train_set, num_epoch = 15, report_every = 1)
+all_losses = train(rnn, train_set, num_epoch = 5, report_every = 1)
 
 # show training results
 plt.figure()
