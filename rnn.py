@@ -1,16 +1,19 @@
 # SET UP BASICS
-import torch
-import os
-from dataset import NamesDataset
+import torch.nn as nn
+import torch.nn.functional as F
 
-# use GPU if possible
-device = torch.device('cpu')
-if torch.cuda.is_available():
-    decide = torch.device('cuda')
-torch.set_default_device(device)
+# CREATE NN
+class CharRNN(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(CharRNN, self).__init__()
 
-# set up dataset
-alldata = NamesDataset("data/names")
-print(f'loaded {len(alldata)} names')
-print(f'example: {alldata[0]}')
-print(alldata.labels_unique)
+        self.rnn = nn.RNN(input_size, hidden_size)
+        self.hidden_to_output = nn.Linear(hidden_size, output_size) # applies the linear equation (weights and biases)
+        self.softmax = nn.LogSoftmax(dim = 1) # does log soft max (kinda like relu but different way)
+
+    def forward(self, line_tensor):
+        rnn_out, hidden = self.rnn(line_tensor) # input to hidden layer
+        output = self.hidden_to_output(hidden[0]) # hidden layer to output
+        output = self.softmax(output) # apply soft max to output
+
+        return output

@@ -14,7 +14,7 @@ def letter_to_index(letter):
     index = allowed_char.find(letter)
     return len(allowed_char)-1 if index == -1 else index
 
-# turn name into list of one hot tensors
+# turn name into "list" of one hot tensors (actually just a big tensor)
 def string_to_tensor(line): 
     tensor = torch.zeros(len(line), 1, len(allowed_char))
     for index, letter in enumerate(line):
