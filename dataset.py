@@ -10,7 +10,6 @@ from preprocess import string_to_tensor
 class NamesDataset (Dataset):
     def __init__(self, data_dir):
         self.data_dir = data_dir # where the data is stored
-        self.load_time = time.localtime
         self.labels_unique = [] # unique list of every language (use list to preserve order, then dict to remove duplicates)
 
         self.data = [] # list of names
@@ -38,6 +37,6 @@ class NamesDataset (Dataset):
     def __len__(self):
         return len(self.data)
     
-    # return label tensor, data tensor list (name in tensors), label, and data (name)
-    def __getitem__(self, index):
+    # return label tensor (language in tensor), data tensor list (name in tensors), label (language), and data (name)
+    def __getitem__(self, index:int) -> tuple[torch.Tensor, torch.Tensor, str, str]:
         return self.labels_tensors[index], self.data_tensors[index], self.labels[index], self.data[index]
