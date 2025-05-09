@@ -21,7 +21,7 @@ torch.set_default_device(device)
 all_data = NamesDataset("data/names")
 
 # split dataset into training and testing set
-train_set, test_set = torch.utils.data.random_split(all_data, [.2, .8], 
+train_set, test_set, extra_set = torch.utils.data.random_split(all_data, [.8, .2, .0], 
                                                     generator = torch.Generator(device = device).manual_seed(123))
 
 
@@ -29,7 +29,7 @@ train_set, test_set = torch.utils.data.random_split(all_data, [.2, .8],
 rnn = CharRNN(len(preprocess.allowed_char), 128, len(all_data.labels_unique))
 
 # train neural network
-def train(rnn, training_data, num_epoch:int = 10, batch_size:int = 64, report_every:int = 1, learning_rate:float = 0.1, criterion = nn.NLLLoss()):
+def train(rnn, training_data, num_epoch:int = 10, batch_size:int = 64, report_every:int = 1, learning_rate:float = 0.2, criterion = nn.NLLLoss()):
     # track loss over time
     current_loss = 0
     all_losses = []
@@ -73,16 +73,58 @@ def train(rnn, training_data, num_epoch:int = 10, batch_size:int = 64, report_ev
 
     return all_losses
 
-all_losses = train(rnn, train_set, num_epoch = 5, report_every = 1)
+all_losses = train(rnn, train_set, num_epoch = 30, report_every = 2)
 
-torch.save(rnn.state_dict(), "./weights_and_biases")
+torch.save(rnn, "./my_model")
 
 # show training results
 plt.figure()
 plt.plot(all_losses)
 plt.show()
 
-# test neural network
-def test():
-    pass
+# TEST NEURAL NETWORK
+def test(rnn, testing_data, classes):
+    confusion_matrix = torch.zeros(len(classes), len(classes))
+    percent_correct = 0
+
+    rnn.eval() # turn on eval flag
+    with torch.no_grad(): # don't record gradients
+        for index in range(len(testing_data)): # go thru each test example
+            (label_tensor, data_tensor, label, data) = testing_data[index]
+            label_index = classes.index(label) # the index of the correct answer for this testcase
+            output = rnn(data_tensor)
+            guess, guess_index = postprocess.label_from_output(output, classes) # the guess and index of the guess
+
+            if index % (len(testing_data)//10) == 0: # print 10 outputs
+                print("guess: "+str(guess)+", guess_idx: "+str(guess_index)+", label: "+str(label)+", label_idx: "+str(label_index))
+
+            confusion_matrix[guess_index][label_index] += 1
+            if guess_index == label_index:
+                percent_correct += 1
+
+    # turn the total count into percentage (aka normalize)
+    for row_index in range(len(confusion_matrix)):
+        row_total = confusion_matrix[row_index].sum()
+        if (row_total > 0):
+            confusion_matrix[row_index] /= row_total
+    percent_correct = (percent_correct*100)//len(testing_data)
+
+    print(torch.round(confusion_matrix, decimals = 4))
+    print(str(percent_correct) + "% correct")
+
+    # plot the confusion matrix
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(confusion_matrix.cpu().numpy()) # need to convert from gpu to cpu mem bcs numpy uses cpu
+    fig.colorbar(cax)
+
+    ax.set_xticks(np.arange(len(classes)), labels=classes, rotation=90)
+    ax.set_yticks(np.arange(len(classes)), labels=classes)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    plt.xlabel("Answer")
+    plt.ylabel("Guess")
+    plt.show()
+
+test(rnn, test_set, all_data.labels_unique)
 
