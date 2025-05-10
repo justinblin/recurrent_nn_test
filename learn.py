@@ -109,7 +109,7 @@ def test(rnn, testing_data, classes):
             confusion_matrix[row_index] /= row_total
     percent_correct = (percent_correct*100)//len(testing_data)
 
-    print(torch.round(confusion_matrix, decimals = 4))
+    print(torch.round(confusion_matrix, decimals = 2))
     print(str(percent_correct) + "% correct")
 
     # plot the confusion matrix
