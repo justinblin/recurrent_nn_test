@@ -18,7 +18,7 @@ class NamesDataset (Dataset):
         self.labels_tensors = [] # list of languages in tensors
 
         # read all the text files in the directory
-        text_files = glob.glob(os.path.join(data_dir, '*.txt'))
+        text_files = glob.glob(os.path.join(data_dir, '*.txt')) # make an iterable of all the text files in the data directory
         for filename in text_files: # go thru each of the text files, get the name of the file, add to labels set
             label = os.path.splitext(os.path.basename(filename))[0]
             self.labels_unique.append(label)

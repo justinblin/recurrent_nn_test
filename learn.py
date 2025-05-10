@@ -17,6 +17,8 @@ if torch.cuda.is_available():
     device = torch.device('cuda')
 torch.set_default_device(device)
 
+print(device)
+
 # set up dataset
 all_data = NamesDataset("data/names")
 
@@ -29,7 +31,7 @@ train_set, test_set, extra_set = torch.utils.data.random_split(all_data, [.8, .2
 rnn = CharRNN(len(preprocess.allowed_char), 128, len(all_data.labels_unique))
 
 # train neural network
-def train(rnn, training_data, num_epoch:int = 10, batch_size:int = 64, report_every:int = 1, learning_rate:float = 0.2, criterion = nn.NLLLoss()):
+def train(rnn:CharRNN, training_data:NamesDataset, num_epoch:int = 10, batch_size:int = 64, report_every:int = 1, learning_rate:float = 0.2, criterion = nn.NLLLoss()):
     # track loss over time
     current_loss = 0
     all_losses = []
@@ -83,7 +85,7 @@ plt.plot(all_losses)
 plt.show()
 
 # TEST NEURAL NETWORK
-def test(rnn, testing_data, classes):
+def test(rnn:CharRNN, testing_data:NamesDataset, classes):
     confusion_matrix = torch.zeros(len(classes), len(classes))
     percent_correct = 0
 
